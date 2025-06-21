@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Loan EMI Calculator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f58634;
+    }
+
+    .container {
+      background: #fff;
+      margin: 50px auto;
+      padding: 30px;
+      max-width: 900px;
+      border-radius: 15px;
+      display: flex;
+      justify-content: space-between;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+
+    .left {
+      width: 50%;
+    }
+
+    .right {
+      width: 45%;
+      text-align: center;
+    }
+
+    h3 {
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin: 15px 0 5px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      font-size: 16px;
+    }
+
+    .output {
+      margin-top: 20px;
+      padding: 10px;
+      background: #ffefcc;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .apply-btn {
+      background: #f58634;
+      color: #fff;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    canvas {
+      max-width: 100%;
+    }
+
+    .details {
+      text-align: left;
+      font-size: 14px;
+      margin: 15px 0;
+    }
+
+    .details span {
+      display: block;
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="left">
+      <h3>Select the loan amount range</h3>
+
+      <label>Loan Amount</label>
+      <input type="number" id="amount" value="1000000" />
+      <input type="range" min="100000" max="30000000" value="1000000" id="amountSlider" />
+
+      <label>Interest Rate (% p.a.)</label>
+      <input type="number" id="rate" value="7" step="0.1" />
+      <input type="range" min="1" max="20" value="7" step="0.1" id="rateSlider" />
+
+      <label>Tenure (Years)</label>
+      <input type="number" id="years" value="10" />
+      <input type="range" min="1" max="30" value="10" id="tenureSlider" />
+    </div>
+
+    <div class="right">
+      <canvas id="chart" width="200" height="200"></canvas>
+
+      <div class="details" id="details"></div>
+      <div class="output" id="emi">Your Monthly EMI is ₹ 0</div>
+      <button class="apply-btn">APPLY FOR HOME LOAN</button>
+    </div>
+  </div>
+
+  <script>
+    const amountInput = document.getElementById("amount");
+    const rateInput = document.getElementById("rate");
+    const yearsInput = document.getElementById("years");
+
+    const amountSlider = document.getElementById("amountSlider");
+    const rateSlider = document.getElementById("rateSlider");
+    const tenureSlider = document.getElementById("tenureSlider");
+
+    const emiOutput = document.getElementById("emi");
+    const details = document.getElementById("details");
+
+    let chart;
+
+    function calculateEMI() {
+      const P = parseFloat(amountInput.value);
+      const annualRate = parseFloat(rateInput.value);
+      const r = annualRate / 12 / 100;
+      const n = parseInt(yearsInput.value) * 12;
+
+      const emi = (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+      const totalPayment = emi * n;
+      const interest = totalPayment - P;
+
+      emiOutput.innerHTML = `Your Monthly EMI is ₹ ${emi.toFixed(2)}`;
+      details.innerHTML = `
+        <span>Principal amount: ₹ ${P.toLocaleString()}</span>
+        <span>Interest amount: ₹ ${interest.toLocaleString()}</span>
+        <span>Total amount: ₹ ${totalPayment.toLocaleString()}</span>
+      `;
+
+      drawChart(P, interest);
+    }
+
+    function drawChart(principal, interest) {
+      const ctx = document.getElementById("chart").getContext("2d");
+
+      if (chart) chart.destroy();
+
+      chart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Principal', 'Interest'],
+          datasets: [{
+            data: [principal, interest],
+            backgroundColor: ['#c0392b', '#f39c12'],
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top'
+            }
+          }
+        }
+      });
+    }
+
+    // Sync sliders and inputs
+    amountSlider.addEventListener("input", () => {
+      amountInput.value = amountSlider.value;
+      calculateEMI();
+    });
+    amountInput.addEventListener("input", () => {
+      amountSlider.value = amountInput.value;
+      calculateEMI();
+    });
+
+    rateSlider.addEventListener("input", () => {
+      rateInput.value = rateSlider.value;
+      calculateEMI();
+    });
+    rateInput.addEventListener("input", () => {
+      rateSlider.value = rateInput.value;
+      calculateEMI();
+    });
+
+    tenureSlider.addEventListener("input", () => {
+      yearsInput.value = tenureSlider.value;
+      calculateEMI();
+    });
+    yearsInput.addEventListener("input", () => {
+      tenureSlider.value = yearsInput.value;
+      calculateEMI();
+    });
+
+    // Initial call
+    calculateEMI();
+  </script>
+</body>
+</html>
